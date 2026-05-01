@@ -1,0 +1,35 @@
+[package]
+name = "LLLMTranslater"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+# Pythonを埋め込むためのライブラリ
+pyo3 = { version = "0.20", features = ["auto-initialize"] }
+
+# GUI用
+eframe = "0.27"
+rfd = "0.14"
+
+# YAML解析用
+serde = { version = "1.0.228", features = ["derive"] }
+serde_yaml = "0.9.34"
+
+# 音声合成 (TTS) 用
+rodio = "0.18"        # 音声再生用
+tts = "0.26"          # OS標準のTTSエンジン呼び出し用
+
+# ログのタイムスタンプ用
+chrono = "0.4"
+
+# アイコンを読み込むために追加
+image = "0.25" 
+
+[build-dependencies]
+winres = "0.1" # Windows用アイコン埋め込み
+image = "0.25" # ビルド時のアイコン変換用に追加
+
+[package.metadata.bundle]
+name = "3LMTranslater"
+identifier = "com.yuzuko.lllmtranslater"
+icon = ["assets/icon.icns"] # ここでicnsファイルを指定

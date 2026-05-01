@@ -1,0 +1,17 @@
+/target
+.qodo
+.history
+.venv
+docs
+public
+
+python_bridge/__pycache__
+
+*.zip
+Noto_Sans
+Noto_Sans_JP
+
+*.bin
+*.onnx
+
+*.ico

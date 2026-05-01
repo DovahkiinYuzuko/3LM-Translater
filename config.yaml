@@ -1,0 +1,28 @@
+ui_lang: English
+window_width: 1164.0
+window_height: 685.0
+model_path: L:\localLLMmodels\GGUF\translategemma-4b-it.Q6_K.gguf
+device: auto
+espeak_path: ''
+languages:
+- English(UK)
+- English(US)
+- Japanese
+- Chinese (Simplified)
+- Chinese (Traditional)
+- French
+- German
+- Korean
+- Spanish
+- Russian
+- Italian
+default_src: English(UK)
+default_target: English(US)
+max_new_tokens: 512
+temperature: 0.1
+top_p: 0.9
+top_k: 40
+repeat_penalty: 1.1
+system_prompt: |+
+  Translate the following input.
+

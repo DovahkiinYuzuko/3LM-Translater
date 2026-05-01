@@ -1,0 +1,16 @@
+# GGUF推論用（llama-cpp-python）
+# 注意: GPU版を入れる場合は pip install の時に環境変数が必要です
+llama-cpp-python
+
+# TTS (Kokoro) 関連
+onnxruntime         # GPU使うなら onnxruntime-gpu
+numpy
+# 日本語・英語の音素変換用
+misaki[ja]
+misaki[en]
+# 他言語（中国語、スペイン語など）の音素変換用に必須
+phonemizer
+
+# ユーティリティ
+huggingface_hub
+soundfile
