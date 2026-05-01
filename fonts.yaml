@@ -1,0 +1,8 @@
+# UI言語名: "fontsフォルダからの相対パス"
+# 名前は config.yaml や i18n.yaml の言語名と一致させてね！
+
+Japanese: "fonts/NotoSansJP-VariableFont_wght.ttf"
+English: "fonts/NotoSans-VariableFont_wdth,wght.ttf"
+Chinese: "fonts/NotoSansSC-Regular.otf"
+Korean: "fonts/NotoSansKR-Regular.otf"
+Spanish: "fonts/NotoSans-VariableFont_wdth,wght.ttf"

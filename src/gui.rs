@@ -191,7 +191,7 @@ pub struct MyApp {
 
 impl MyApp {
     pub fn new(cc: &eframe::CreationContext<'_>, mut config: AppConfig) -> Self {
-        setup_custom_fonts(&cc.egui_ctx);
+        setup_custom_fonts(&cc.egui_ctx, &config.ui_lang);
         
         let mut visuals = egui::Visuals::dark();
         visuals.window_fill = egui::Color32::from_rgb(25, 25, 25);
@@ -211,7 +211,8 @@ impl MyApp {
 
         let (tx, rx) = channel();
         
-        let i18n_all = match std::fs::read_to_string("i18n.yaml") {
+        let i18n_path = crate::get_resource_path("i18n.yaml");
+        let i18n_all = match std::fs::read_to_string(&i18n_path) {
             Ok(content) => serde_yaml::from_str(&content).unwrap_or_default(),
             Err(_) => BTreeMap::new(),
         };
@@ -255,8 +256,9 @@ impl MyApp {
     }
 
     fn save_config(&self) {
+        let config_path = crate::get_resource_path("config.yaml");
         if let Ok(yaml) = serde_yaml::to_string(&self.config) {
-            let _ = std::fs::write("config.yaml", yaml);
+            let _ = std::fs::write(config_path, yaml);
         }
     }
 
@@ -276,7 +278,7 @@ impl MyApp {
         
         thread::spawn(move || {
             let mut cmd = std::process::Command::new("python");
-            cmd.arg("./python_bridge/setup_wizard.py");
+            cmd.arg(crate::get_resource_path("python_bridge/setup_wizard.py"));
             
             match cmd.output() {
                 Ok(output) => {
@@ -303,7 +305,8 @@ impl MyApp {
             pyo3::prepare_freethreaded_python();
             let res = Python::with_gil(|py| -> PyResult<()> {
                 let sys = py.import("sys")?;
-                sys.getattr("path")?.call_method1("append", ("./python_bridge",))?;
+                let bridge_path = crate::get_resource_path("python_bridge").to_string_lossy().to_string();
+                sys.getattr("path")?.call_method1("append", (bridge_path,))?;
                 let engine = py.import("engine")?;
                 
                 engine.call_method1("load_model", (absolute_path,))?;
@@ -336,7 +339,11 @@ impl MyApp {
         thread::spawn(move || {
             pyo3::prepare_freethreaded_python();
             let res = Python::with_gil(|py| -> PyResult<String> {
+                let sys = py.import("sys")?;
+                let bridge_path = crate::get_resource_path("python_bridge").to_string_lossy().to_string();
+                sys.getattr("path")?.call_method1("append", (bridge_path,))?;
                 let engine = py.import("engine")?;
+                
                 let params = PyDict::new(py);
                 params.set_item("max_new_tokens", config.max_new_tokens)?;
                 params.set_item("temperature", config.temperature)?;
@@ -418,6 +425,7 @@ impl MyApp {
                             });
                         if ui_lang_changed {
                             self.save_config();
+                            setup_custom_fonts(ctx, &self.config.ui_lang);
                         }
                     });
 
@@ -644,7 +652,6 @@ impl MyApp {
 fn parse_thought_process(text: &str) -> (String, String) {
     let mut text = text.trim();
     
-    // 変数使わないから text.contains で存在チェックだけする！
     if text.contains("<|channel>thought") {
         if let Some(end) = text.find("<channel|>") {
             text = text[end + 10..].trim();
@@ -672,25 +679,34 @@ fn parse_thought_process(text: &str) -> (String, String) {
     (String::new(), text.to_string())
 }
 
-fn setup_custom_fonts(ctx: &egui::Context) {
+fn setup_custom_fonts(ctx: &egui::Context, current_lang: &str) {
     let mut fonts = egui::FontDefinitions::default();
+    let fonts_yaml_path = crate::get_resource_path("fonts.yaml");
     
-    let font_configs = [
-        ("latin", "fonts/NotoSans-VariableFont_wdth,wght.ttf"),
-        ("jp", "fonts/NotoSansJP-VariableFont_wght.ttf"),
-        ("sc", "fonts/NotoSansSC-Regular.otf"),
-        ("kr", "fonts/NotoSansKR-Regular.otf"),
-    ];
-
     let mut loaded_fonts = Vec::new();
 
-    for (name, path) in font_configs {
-        if let Ok(font_data) = std::fs::read(path) {
-            if font_data.len() > 100_000 {
-                fonts.font_data.insert(name.to_owned(), egui::FontData::from_owned(font_data));
-                loaded_fonts.push(name.to_owned());
-            } else {
-                println!("Warning: Skipping invalid or broken font file: {}", path);
+    // fonts.yaml を読み込んでフォントを登録
+    if let Ok(yaml_str) = std::fs::read_to_string(&fonts_yaml_path) {
+        if let Ok(font_map) = serde_yaml::from_str::<std::collections::BTreeMap<String, String>>(&yaml_str) {
+            
+            // 1. 現在のUI言語のフォントを最優先で登録
+            if let Some(path) = font_map.get(current_lang) {
+                let font_path = crate::get_resource_path(path);
+                if let Ok(font_data) = std::fs::read(&font_path) {
+                    fonts.font_data.insert(current_lang.to_owned(), egui::FontData::from_owned(font_data));
+                    loaded_fonts.push(current_lang.to_owned());
+                }
+            }
+            
+            // 2. その他の言語のフォントもフォールバックとして全部突っ込む
+            for (lang, path) in font_map {
+                if lang != current_lang {
+                    let font_path = crate::get_resource_path(&path);
+                    if let Ok(font_data) = std::fs::read(&font_path) {
+                        fonts.font_data.insert(lang.clone(), egui::FontData::from_owned(font_data));
+                        loaded_fonts.push(lang);
+                    }
+                }
             }
         }
     }

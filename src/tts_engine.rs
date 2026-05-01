@@ -20,7 +20,6 @@ pub fn is_kokoro_supported(lang: &str) -> bool {
     get_kokoro_voice(lang).is_some()
 }
 
-// espeak_path を受け取るように引数を追加！
 pub fn speak(text: String, target_lang: String, is_speaking: Arc<AtomicBool>, ctx: Context, espeak_path: String) {
     if text.trim().is_empty() { return; }
 
@@ -33,10 +32,10 @@ pub fn speak(text: String, target_lang: String, is_speaking: Arc<AtomicBool>, ct
             
             let py_res = Python::with_gil(|py| -> PyResult<()> {
                 let sys = py.import("sys")?;
-                sys.getattr("path")?.call_method1("append", ("./python_bridge",))?;
+                let bridge_path = crate::get_resource_path("python_bridge").to_string_lossy().to_string();
+                sys.getattr("path")?.call_method1("append", (bridge_path,))?;
                 let engine = py.import("engine")?;
                 
-                // config.yaml の espeak_path を Python の generate_audio に渡す
                 let result = engine.call_method1("generate_audio", (text, lang_code, voice_name, espeak_path))?;
                 audio_data = result.extract()?;
                 Ok(())

@@ -4,6 +4,7 @@
 .venv
 docs
 public
+dist
 
 python_bridge/__pycache__
 
@@ -15,3 +16,5 @@ Noto_Sans_JP
 *.onnx
 
 *.ico
+
+

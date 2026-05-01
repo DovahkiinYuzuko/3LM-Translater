@@ -1,7 +1,7 @@
 ui_lang: English
 window_width: 1164.0
 window_height: 685.0
-model_path: L:\localLLMmodels\GGUF\translategemma-4b-it.Q6_K.gguf
+model_path: 
 device: auto
 espeak_path: ''
 languages:
